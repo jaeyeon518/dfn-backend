@@ -7,6 +7,7 @@ rootProject.name = "backend-test"
 include(
     // App
     "app:data-ingestion",
+    "app:data-processor",
     "app:data-producer",
 
     // Model
@@ -17,5 +18,6 @@ include(
 )
 
 project(":app:data-ingestion").projectDir = file("app/data-ingestion")
+project(":app:data-processor").projectDir = file("app/data-processor")
 project(":app:data-producer").projectDir = file("app/data-producer")
 project(":library:generator").projectDir = file("library/generator")
