@@ -1,43 +1,28 @@
 package com.igaworks.dfinery.recruit.backend.app.ingestion.controller
 
+import com.igaworks.dfinery.recruit.backend.app.ingestion.service.IngestionEventPublishService
 import com.igaworks.dfinery.recruit.backend.model.ingestion.DataIngestionRequestDTO
 import com.igaworks.dfinery.recruit.backend.model.ingestion.DataIngestionResponseDTO
-import org.slf4j.LoggerFactory
-import org.springframework.web.bind.annotation.*
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api")
-class DataIngestionController {
+class DataIngestionController(
+    private val publishService: IngestionEventPublishService
+) {
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
-    /**
-     * 데이터 수집 API
-     *
-     * 이 API를 통해 수신된 데이터를 비동기로 처리하는 파이프라인을 구현하세요.
-     *
-     * [Required]
-     * - 수신된 데이터를 비동기 처리 파이프라인으로 전달
-     * - 데이터 규칙에 의거한 Validation 처리
-     * - Validation 실패 데이터에 대한 처리 설계
-     * - 최대 2,000개 row 단위로 JSON 파일 로컬 적재
-     *
-     * [Optional]
-     * - 병렬 처리
-     * - Backpressure 처리
-     * - 처리량 최적화
-     */
     @PostMapping("/v1/collect")
-    suspend fun collect(@RequestBody request: DataIngestionRequestDTO): DataIngestionResponseDTO {
-        log.info(
-            "Received collect request: serviceId={}, userId={}, deviceId={}, eventCount={}",
-            request.common.serviceId,
-            request.common.userId,
-            request.common.deviceId,
-            request.events.size
-        )
-
-        // TODO: 비동기 처리 파이프라인으로 전달하는 로직을 구현하세요.
+    fun collect(@Valid @RequestBody request: DataIngestionRequestDTO): DataIngestionResponseDTO {
+        val accepted = publishService.enqueue(request)
+        if (!accepted) {
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "failed to enqueue ingestion event")
+        }
 
         return DataIngestionResponseDTO(success = true, rowCount = request.events.size)
     }

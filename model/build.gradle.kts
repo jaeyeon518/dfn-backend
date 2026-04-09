@@ -1,1 +1,4 @@
-// model module - 데이터 클래스 모듈
+// model module - shared DTOs
+dependencies {
+    implementation("jakarta.validation:jakarta.validation-api")
+}
